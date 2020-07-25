@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <style>
+        .loader {
+            border: 6px solid #f3f3f3;
+            /* Light grey */
+            border-top: 6px solid #77b648;
+            /* Blue */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body style="background: #090979;">
+
+    <div class="container shadow bg-white">
+        <div class="container" style="width:900px;">
+            <h2 align="center">JSON Live Data Search con Ajax JQuery</h2>
+            <h3 align="center">Lista film</h3>
+            <br /><br />
+            <div align="center">
+                <input type="text" name="search" id="search" placeholder="Cerca film" class="form-control" autocomplete="off" />
+            </div>
+            <ul class="list-group" id="result"></ul>
+            <br />
+        </div>
+        <!-- Image loader -->
+        <div class="loader" id="loader" style="display: none;"></div>
+        <table class="table" id="lista">
+            <thead>
+                <tr>
+                    <th scope="col">First</th>
+                    <th scope="col">Last</th>
+                    <th scope="col">Handle</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Lista film -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // script - load json data 
+            var table = $("#lista tbody");
+
+            $(window).on('load', function() {
+                getAjax();
+            });
+
+            function getAjax() {
+                $.ajax({
+                    type: 'get',
+                    url: 'moves_list.json',
+                    dataType: ' json',
+
+                    beforeSend: function() {
+                        // Show image container
+                        $("#loader").show();
+                        $("#send").hide();
+                    },
+                    success: function(data) {
+
+                        $("#loader").hide();
+
+                        $.each(data, function(index, response) {
+
+                            var title = response.title;
+                            var trailer = response.trailer;
+                            var multi_link = response.multi_link;
+                            table.append("<tr>" +
+                                "<td >" + title + "</td>" +
+                                "<td ><a " + trailer + " target='_blank'>Trailer</a></td>" +
+                                "<td ><a " + multi_link + " target='_blank'>Multi Link</a></td>" +
+
+                                "</tr>");
+                            //var valori = "<li>" + element.email + "</li>";
+                            //$(valori).appendTo('#lista');
+                        })
+                    },
+                    error: function(jqXHR, exception) {
+                        var msg = '';
+                        if (jqXHR.status === 0) {
+                            $("#loader").hide();
+                            $("#send").show();
+                            alert('<p class="alert alert-danger">Not connect.\n Verify Network.</p>');
+
+                        } else if (jqXHR.status == 404) {
+                            $("#loader").hide();
+                            $("#send").show();
+                            alert('<p class="alert alert-danger">Requested page not found. [404]</p>');
+
+                        } else if (jqXHR.status == 500) {
+                            $("#loader").hide();
+                            $("#send").show();
+                            alert('<p class="alert alert-danger">Internal Server Error [500].</p>');
+
+                        } else if (exception === 'parsererror') {
+                            $("#loader").hide();
+                            $("#send").show();
+                            alert('<p class="alert alert-danger">Requested JSON parse failed.</p>');
+
+                        } else if (exception === 'timeout') {
+                            $("#loader").hide();
+                            $("#send").show();
+                            alert('<p class="alert alert-danger">Time out error.</p>');
+
+                        } else if (exception === 'abort') {
+                            $("#loader").hide();
+                            $("#send").show();
+                            alert('<p class="alert alert-danger">Ajax request aborted.</p>');
+                            msg = '';
+                        } else {
+                            $("#loader").hide();
+                            $("#send").show();
+                            alert('<p class="alert alert-danger">Uncaught Error.\n' + jqXHR.responseText + '</p>');
+
+                        }
+
+                    }
+
+                });
+            }
+
+            // script - live search json data 
+            $.ajaxSetup({
+                cache: false
+            });
+            $('#search').keyup(function() {
+                $('#result').html('');
+                $('#state').val('');
+                var searchField = $('#search').val();
+                var expression = new RegExp(searchField, "i");
+                $.getJSON('moves_list.json', function(data) {
+                    table.html('');
+
+                    $.each(data, function(key, value) {
+                        if (value.title.search(expression) != -1) {
+
+                            //$('#result').append('<li class="list-group-item link-class">' + value.title + '</span></li>');
+                            var title = value.title;
+                            var trailer = value.trailer;
+                            var multi_link = value.multi_link;
+                            table.append("<tr>" +
+                                "<td >" + title + "</td>" +
+                                "<td ><a " + trailer + " target='_blank'>Trailer</a></td>" +
+                                "<td ><a " + multi_link + " target='_blank'>Multi Link</a></td>" +
+
+                                "</tr>");
+                        }
+                    });
+                });
+            });
+
+            $('#result').on('click', 'li', function() {
+
+                var click_text = $(this).text().split('|');
+                $('#search').val($.trim(click_text[0]));
+                $("#result").html('');
+
+            });
+
+
+
+
+
+        });
+    </script>
+</body>
+
+</html>
